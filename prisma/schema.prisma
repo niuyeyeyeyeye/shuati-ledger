@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 题目
+model Problem {
+  id         Int       @id @default(autoincrement())
+  leetcodeId Int?      @unique
+  title      String
+  difficulty String
+  topic      String
+  status     String    @default("new") // new / seen / mastered
+  note       String?
+  pitfall    String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  attempts   Attempt[]
+}
+
+// 每次练习记录
+model Attempt {
+  id          Int      @id @default(autoincrement())
+  problemId   Int
+  date        DateTime @default(now())
+  durationMin Int?
+  result      String // ac / hint / fail
+  round       Int      @default(1)
+  memo        String?
+  pitfallTag  String? // boundary / js / pointer / logic / other
+
+  problem     Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([problemId])
+  @@index([pitfallTag])
+}
