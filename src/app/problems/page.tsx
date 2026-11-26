@@ -2,43 +2,43 @@ import { prisma } from '@/lib/prisma'
 import styles from './problems.module.css'
 import Link from 'next/link'
 
-type Props ={
-  searchParams:Promise<{[key:string]:string|string[]|undefined}>
+type Props = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
-const TOPICS=['链表','二叉树','数组']
-const DIFFICULTIES=['简单','中等','困难']
-const STATUSES=[
-  {value:'new',label:'未做'},
-  {value:'seen',label:'🟡 见过'},
-  {value:'mastered',label:'🟢 会做'}
+const TOPICS = ['链表', '二叉树', '数组']
+const DIFFICULTIES = ['简单', '中等', '困难']
+const STATUSES = [
+  { value: 'new', label: '未做' },
+  { value: 'seen', label: '🟡 见过' },
+  { value: 'mastered', label: '🟢 会做' }
 ]
 
 type Filters = {
-  topic?:string,
-  difficulty?:string,
-  status?:string,
+  topic?: string,
+  difficulty?: string,
+  status?: string,
 }
 
-type FilterKey = 'topic'|'difficulty'|'status'
+type FilterKey = 'topic' | 'difficulty' | 'status'
 
-function buildHref(current:Filters,key:FilterKey,value:string):string{
-  const next=new URLSearchParams()
-  const keys:FilterKey[]=['topic','difficulty','status']
+function buildHref(current: Filters, key: FilterKey, value: string): string {
+  const next = new URLSearchParams()
+  const keys: FilterKey[] = ['topic', 'difficulty', 'status']
 
-  for(const k of keys){
-    if(k===key)continue
-    const v=current[k]
-    if(v!==undefined){
-      next.set(k,v)
+  for (const k of keys) {
+    if (k === key) continue
+    const v = current[k]
+    if (v !== undefined) {
+      next.set(k, v)
     }
   }
 
-  if(current[key]!==value){
-    next.set(key,value)
+  if (current[key] !== value) {
+    next.set(key, value)
   }
 
-  const qs=next.toString()
-  return qs===''?'/problems':`/problems?${qs}`
+  const qs = next.toString()
+  return qs === '' ? '/problems' : `/problems?${qs}`
 }
 
 
@@ -73,21 +73,21 @@ function FilterRow({
 }
 
 // ⭐ 注意这个 async —— 它是一个 Server Component，直接在组件里 await 数据库
-export default async function ProblemsPage({searchParams}:Props) {
-  const sp=await searchParams
+export default async function ProblemsPage({ searchParams }: Props) {
+  const sp = await searchParams
 
-  const difficulty=typeof sp.difficulty==='string'?sp.difficulty:undefined
-  const topic=typeof sp.topic==='string'?sp.topic:undefined
-  const status=typeof sp.status==='string'?sp.status:undefined
+  const difficulty = typeof sp.difficulty === 'string' ? sp.difficulty : undefined
+  const topic = typeof sp.topic === 'string' ? sp.topic : undefined
+  const status = typeof sp.status === 'string' ? sp.status : undefined
 
   const problems = await prisma.problem.findMany({
-    where:{
-      difficulty:difficulty,
-      topic:topic,
-      status:status,
+    where: {
+      difficulty: difficulty,
+      topic: topic,
+      status: status,
     },
     orderBy: { createdAt: 'desc' },
-    include: { _count:{select:{attempts:true}}}
+    include: { _count: { select: { attempts: true } } }
   })
 
   return (
@@ -122,7 +122,7 @@ export default async function ProblemsPage({searchParams}:Props) {
 
       <div className={styles.list}>
         {problems.map((p) => (
-          <div key={p.id} className={styles.card}>
+          <Link href={`/problems/${p.id}`} key={p.id} className={styles.card}>
             <p className={styles.title}>
               {p.leetcodeId ? `#${p.leetcodeId} ` : ''}
               {p.title}
@@ -132,14 +132,13 @@ export default async function ProblemsPage({searchParams}:Props) {
               <span className={styles.tag}>{p.topic}</span>
               <span className={styles.tag}>{p._count.attempts}次尝试</span>
               <span
-                className={`${styles.tag} ${
-                  p.status === 'mastered' ? styles.mastered : styles.seen
-                }`}
+                className={`${styles.tag} ${p.status === 'mastered' ? styles.mastered : styles.seen
+                  }`}
               >
                 {p.status === 'mastered' ? '🟢 会做' : p.status === 'seen' ? '🟡 见过' : '未做'}
               </span>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </main>
